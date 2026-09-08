@@ -185,6 +185,7 @@ def export():
     mem=io.BytesIO(out.getvalue().encode()); mem.seek(0)
     return send_file(mem,as_attachment=True,download_name="neopharmax_patients.csv",mimetype="text/csv")
 
-if __name__=="__main__":
-    init_db()
-    app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)),debug=True)
+init_db()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
