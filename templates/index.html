@@ -1,32 +1,120 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Neopharmax</title><link rel="stylesheet" href="/static/style.css">
+<title>NeoPharmX | Patient Case-Taking</title><link rel="stylesheet" href="/static/style.css">
 </head><body>
-<div id="login" class="login"><div class="login-card"><div class="logo">⚕</div><h1>Neopharmax</h1><p>Better Data. Healthier Tomorrow.</p><form id="loginForm"><input id="email" type="email" value="demo@neopharmax.local" placeholder="Email"><input id="password" type="password" value="demo123" placeholder="Password"><button>Sign in</button><small>Demo account included</small></form><div id="loginErr"></div></div></div>
+<div id="login" class="login"><div class="login-card">
+  <div class="logo">⚕</div><h1>NeoPharmX</h1><p>AI-assisted patient case-taking platform</p>
+  <div class="role-tabs"><button id="physicianTab" class="role-tab active" onclick="setLoginRole('physician')">Physician</button><button id="patientTab" class="role-tab" onclick="setLoginRole('patient')">Patient</button></div>
+  <form id="loginForm"><input id="email" type="email" value="demo@neopharmax.local" placeholder="Email"><input id="password" type="password" value="demo123" placeholder="Password"><button class="login-btn">Sign in</button></form>
+  <div id="loginHint" class="demo-hint">Demo physician: demo@neopharmax.local / demo123</div><div id="loginErr"></div>
+</div></div>
+
 <div id="app" class="hidden">
-<aside><div class="brand"><div class="logo">⚕</div><div><b>Neopharmax</b><small>Better Data. Healthier Tomorrow.</small></div></div>
-<nav>
-<button class="active" data-page="dashboard">▦ <span>Dashboard</span></button><button data-page="newcase">＋ <span>New Case</span></button><button data-page="ai">✦ <span>AI Diagnosis</span></button><button data-page="records">▣ <span>Patient Records</span></button><button data-page="analytics">⌁ <span>Analytics</span></button><button data-page="drugs">▱ <span>Drug Information</span></button><button data-page="reports">▤ <span>Reports</span></button><button data-page="settings">⚙ <span>Settings</span></button></nav>
-<div class="quote">“Empowering Pharmacy Practice with Intelligent Data”</div></aside>
-<main><header><div class="search">⌕ <input id="globalSearch" placeholder="Search patients by name, ID, phone or condition..."></div><div class="profile"><span>🔔</span><b id="userName">Manpreet Singh</b><span class="avatar">MS</span><button class="logout" onclick="logout()">Logout</button></div></header>
+<aside id="sidebar"><div class="brand"><div class="logo">⚕</div><div><b>NeoPharmX</b><small>Patient Case-Taking</small></div></div><nav id="nav"></nav><div class="quote">“Capture once. Structure once. Assist intelligently.”</div></aside>
+<main><header><div class="search">⌕ <input id="globalSearch" placeholder="Search patients by name, ID, phone or condition..."></div><div class="profile"><span>●</span><b id="userName"></b><span id="roleBadge" class="role-badge"></span><span id="avatar" class="avatar">NP</span><button class="logout" onclick="logout()">Logout</button></div></header>
 
-<section id="dashboard" class="page active"><div class="welcome"><div><h1>Welcome back, Manpreet!</h1><p>Manage patient data, get AI-assisted insights and support better healthcare outcomes.</p></div><div class="date">▣ Monday, 8 Sep 2026<br><small>Towards a healthier India 🇮🇳</small></div></div>
-<div class="stats"><div class="stat"><i>👥</i><small>Total Patients</small><strong id="total">0</strong><em>Live database</em></div><div class="stat"><i>▤</i><small>New Cases</small><strong id="newcases">0</strong><em>This dashboard</em></div><div class="stat"><i>✦</i><small>AI Suggestions</small><strong id="ais">0</strong><em>Educational use</em></div><div class="stat"><i>💊</i><small>Medication Profiles</small><strong id="meds">0</strong><em>Records with meds</em></div></div>
-<div class="grid"><div class="card hero"><h2>Smarter Patient Data for a Healthier Tomorrow</h2><p>AI-assisted • Structured • Secure-by-design prototype</p><button class="primary" onclick="go('newcase')">＋ Add New Patient</button></div><div class="card"><h3>Patient Overview</h3><div id="bars" class="bars"></div><small class="muted">Live database overview</small></div><div class="card"><h3>Common Conditions</h3><div id="conditions" class="conditions"></div></div></div>
-<div class="notice">🌿 “Accurate data today, healthier communities tomorrow.”</div></section>
+<!-- PHYSICIAN APP -->
+<div id="physicianApp" class="role-app hidden">
+<section id="dashboard" class="page active">
+<div class="dashboard-head">
+  <div>
+    <span class="eyebrow">PHYSICIAN WORKSPACE</span>
+    <h1>Good evening, <span id="welcomeName">Manpreet</span></h1>
+    <p>One workspace for patient records, appointments, AI-assisted case understanding and drug information.</p>
+  </div>
+  <div class="date-card"><span class="date-icon">◷</span><div><b id="todayDate"></b><small>Healthcare professional workspace</small></div></div>
+</div>
 
-<section id="newcase" class="page"><div class="heading"><h1>New Patient Case</h1><p>Enter patient details to create a structured health record.</p></div><div class="card form"><div class="steps"><b>1</b><span>Demographics</span><i></i><span>Clinical Data</span><i></i><span>Review</span></div><div class="fields">
-<label>Patient Name *<input id="p_name" required></label><label>Age<input id="p_age" type="number"></label><label>Sex<select id="p_sex"><option>Select</option><option>Male</option><option>Female</option><option>Other</option></select></label><label>Contact Number<input id="p_phone" placeholder="+91"></label><label>Address<input id="p_address"></label><label>Weight (kg)<input id="p_weight"></label><label>Height (cm)<input id="p_height"></label><label>Condition<input id="p_condition" placeholder="e.g. Fever"></label><label class="full">Chief Complaint<textarea id="p_complaint"></textarea></label><label>Medications<textarea id="p_meds"></textarea></label><label>Allergies<textarea id="p_allergies"></textarea></label><label class="full">Medical History<textarea id="p_history"></textarea></label></div><button class="primary" onclick="savePatient()">Save Patient</button></div></section>
+<div class="dashboard-stats">
+  <button class="metric-card metric-teal" onclick="go('records')"><span class="metric-icon">♙</span><span><small>Total Patients</small><strong id="total">0</strong><em>Open records →</em></span></button>
+  <button class="metric-card metric-blue" onclick="go('appointments')"><span class="metric-icon">▣</span><span><small>Pending Appointments</small><strong id="newcases">0</strong><em>View queue →</em></span></button>
+  <button class="metric-card metric-violet" onclick="go('ai')"><span class="metric-icon">✦</span><span><small>AI Suggestions</small><strong id="ais">0</strong><em>Open assistant →</em></span></button>
+  <button class="metric-card metric-orange" onclick="go('drugs')"><span class="metric-icon">✚</span><span><small>Medication Profiles</small><strong id="meds">0</strong><em>Drug information →</em></span></button>
+</div>
 
-<section id="ai" class="page"><div class="heading"><h1>AI Diagnosis Assistant</h1><p>Educational decision-support prototype for pharmacy practice.</p></div><div class="card ai"><h2>✦ Get AI-assisted suggestions</h2><p class="muted">Describe symptoms, signs or laboratory information.</p><textarea id="symptoms" placeholder="e.g. 22-year-old female, fever for 3 days, sore throat..."></textarea><div class="warning">ⓘ Educational tool only. Cross-check every suggestion with faculty or a licensed clinician. Never use this prototype for real patient decisions.</div><button class="primary" onclick="runAI()">✦ Get AI Suggestions</button><div id="aiout"></div></div></section>
+<div class="dashboard-main-grid">
+  <div class="card clinical-hero-card">
+    <div class="hero-glow"></div><span class="eyebrow">NEOPHARMAX CLINICAL FLOW</span>
+    <h2>From patient information to professional review.</h2>
+    <p>Capture structured information, use controlled rule-based assistance and review relevant drug information before the final professional decision.</p>
+    <div class="hero-actions"><button class="primary" onclick="go('newcase')">＋ Create Patient Case</button><button class="secondary" onclick="go('records')">View Patient Records</button></div>
+    <div class="mini-flow"><span>Patient</span><b>→</b><span>Structured Case</span><b>→</b><span>AI Assist</span><b>→</b><span>Professional Review</span></div>
+  </div>
 
-<section id="records" class="page"><div class="heading row"><div><h1>Patient Records</h1><p>Live records from the SQLite database.</p></div><button class="primary" onclick="go('newcase')">＋ New Case</button></div><div class="card"><div class="toolbar"><input id="recordSearch" oninput="loadRecords()" placeholder="Search name, ID, phone or condition..."><button onclick="exportCSV()">Export CSV</button></div><div class="tablewrap"><table><thead><tr><th>ID</th><th>Name</th><th>Age/Sex</th><th>Condition</th><th>Phone</th><th>Date</th><th>Action</th></tr></thead><tbody id="recordsBody"></tbody></table></div></div></section>
+  <div class="card dashboard-panel">
+    <div class="panel-title"><div><span class="panel-icon green">▦</span><div><h3>Recent Appointments</h3><small>Live consultation queue</small></div></div><button class="link-btn" onclick="go('appointments')">View all →</button></div>
+    <div id="dashboardAppointments" class="appointment-list"></div>
+  </div>
+</div>
 
-<section id="analytics" class="page"><div class="heading"><h1>Analytics</h1><p>Live metrics from your patient database.</p></div><div class="grid"><div class="card"><h3>Data Quality</h3><div class="big">94%</div><p class="muted">Prototype completeness indicator</p></div><div class="card"><h3>Patient Records</h3><div class="big" id="analyticTotal">0</div><p class="muted">Stored in SQLite</p></div><div class="card"><h3>AI Requests</h3><div class="big" id="analyticAI">0</div><p class="muted">Educational suggestions generated</p></div></div></section>
-<section id="drugs" class="page"><div class="heading"><h1>Drug Information</h1><p>Prototype knowledge section.</p></div><div class="card"><input class="wide" placeholder="Search drug name, class or indication..."><div class="notice">Connect this module to an approved drug-information source for production use.</div></div></section>
-<section id="reports" class="page"><div class="heading"><h1>Reports</h1><p>Generate structured patient-data exports.</p></div><div class="card"><h3>Patient Data Report</h3><p class="muted">Export the current database to CSV for SIH demonstration.</p><button class="primary" onclick="exportCSV()">Download Patient CSV</button></div></section>
-<section id="settings" class="page"><div class="heading"><h1>Settings</h1><p>Prototype configuration.</p></div><div class="card"><h3>System</h3><p>Neopharmax Full-Stack SIH Prototype</p><p class="muted">Flask API • SQLite database • Responsive frontend</p></div></section>
-</main></div><div id="toast"></div>
-<script src="/static/app.js"></script>
-</body></html>
+<div class="dashboard-lower-grid">
+  <div class="card dashboard-panel">
+    <div class="panel-title"><div><span class="panel-icon blue">⌁</span><div><h3>Patient Overview</h3><small>Current database distribution</small></div></div><button class="link-btn" onclick="go('analytics')">Analytics →</button></div>
+    <div id="dashboardConditions" class="condition-list"></div>
+    <div class="overview-footer"><span>Live database</span><b id="overviewTotal">0 patient records</b></div>
+  </div>
+
+  <div class="card dashboard-panel quick-panel">
+    <div class="panel-title"><div><span class="panel-icon violet">✦</span><div><h3>Quick Actions</h3><small>Jump directly into the workflow</small></div></div></div>
+    <div class="quick-grid">
+      <button class="quick-action qa-green" onclick="go('newcase')"><span>＋</span><b>New Case</b><small>Add patient</small></button>
+      <button class="quick-action qa-violet" onclick="go('ai')"><span>✦</span><b>AI Assistance</b><small>Analyze case</small></button>
+      <button class="quick-action qa-blue" onclick="go('drugs')"><span>✚</span><b>Drug Information</b><small>Check medicines</small></button>
+      <button class="quick-action qa-orange" onclick="go('reports')"><span>▤</span><b>Reports</b><small>Upload / export</small></button>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-tools-grid">
+  <div class="card dashboard-panel mini-ai-card">
+    <div class="panel-title"><div><span class="panel-icon violet">✦</span><div><h3>AI Case Assistant</h3><small>Rule-based educational support</small></div></div><button class="link-btn" onclick="go('ai')">Full assistant →</button></div>
+    <div class="mini-ai-row"><input id="dashboardAIInput" placeholder="e.g. fever, cough, sore throat for 3 days..."><button class="primary" onclick="runDashboardAI()">Generate</button></div>
+    <div id="dashboardAIResult" class="mini-ai-result"><span>Enter a short case description to generate prototype assistance.</span></div>
+  </div>
+
+  <div class="card dashboard-panel drug-quick-card">
+    <div class="panel-title"><div><span class="panel-icon blue">✚</span><div><h3>Drug Information</h3><small>Search the demo medication knowledge set</small></div></div><button class="link-btn" onclick="go('drugs')">Open module →</button></div>
+    <div class="mini-drug-search"><input id="dashboardDrugSearch" oninput="filterDashboardDrugs()" placeholder="Search drug, class or indication..."> <span>⌕</span></div>
+    <div id="dashboardDrugList" class="dashboard-drug-list"></div>
+  </div>
+</div>
+
+<div class="safety-banner"><span>✓</span><div><b>Human-in-the-loop safety</b><p>NeoPharmX provides educational, rule-based assistance. The qualified healthcare professional remains responsible for the final clinical decision.</p></div><button onclick="go('settings')">Safety controls →</button></div>
+</section>
+
+<section id="newcase" class="page"><div class="heading"><h1>New Patient Case</h1><p>Create a structured patient record and generate a NeoPharmX Patient ID.</p></div><div class="card form"><div class="steps"><b>1</b><span>Identity</span><i></i><b>2</b><span>Clinical Data</span><i></i><b>3</b><span>Review</span></div><div class="fields">
+<label>Patient Name *<input id="p_name" required></label><label>Age<input id="p_age" type="number"></label><label>Sex<select id="p_sex"><option>Select</option><option>Male</option><option>Female</option><option>Other</option></select></label><label>Contact Number<input id="p_phone" placeholder="+91"></label><label>Address<input id="p_address"></label><label>Language<select id="p_language"><option>English</option><option>Hindi</option><option>Regional / Other</option></select></label><label>ABHA ID <span class="optional">optional</span><input id="p_abha" placeholder="ABHA-linked onboarding (demo)"></label><label>Weight (kg)<input id="p_weight"></label><label>Height (cm)<input id="p_height"></label><label>Condition<input id="p_condition" placeholder="e.g. Fever"></label><label class="full">Chief Complaint<textarea id="p_complaint"></textarea></label><label>Current Medications<textarea id="p_meds"></textarea></label><label>Allergies<textarea id="p_allergies"></textarea></label><label class="full">Medical History<textarea id="p_history"></textarea></label></div><button class="primary" onclick="savePatient()">Create Structured Case</button></div></section>
+
+<section id="ai" class="page"><div class="heading"><h1>AI Assistance</h1><p>Rule-based educational decision support for healthcare professionals.</p></div><div class="card ai"><div class="ai-header"><div class="ai-icon">✦</div><div><h2>Case Understanding Assistant</h2><p class="muted">Describe symptoms, history or laboratory context.</p></div></div><textarea id="symptoms" placeholder="Example: 22-year-old female, fever for 3 days, sore throat..."></textarea><div class="warning">ⓘ Prototype only. The module provides educational, rule-based information. It does not independently diagnose or prescribe.</div><button class="primary" onclick="runAI()">✦ Generate Assistance</button><div id="aiout"></div></div></section>
+
+<section id="records" class="page"><div class="heading row"><div><h1>Patient Records</h1><p>Structured cases available to the healthcare professional.</p></div><button class="primary" onclick="go('newcase')">＋ New Case</button></div><div class="card"><div class="toolbar"><input id="recordSearch" oninput="loadRecords()" placeholder="Search name, ID, phone or condition..."><button onclick="exportCSV()">Export CSV</button></div><div class="tablewrap"><table><thead><tr><th>Patient ID</th><th>Name</th><th>Age/Sex</th><th>Condition</th><th>Phone</th><th>Date</th><th>Action</th></tr></thead><tbody id="recordsBody"></tbody></table></div></div></section>
+
+<section id="connections" class="page"><div class="heading"><h1>Patient Connections</h1><p>Connect a registered patient to the physician workflow using a NeoPharmX Patient ID.</p></div><div class="card connection-card"><h3>Create Patient Connection</h3><div class="inline-form"><input id="connectionPatientId" placeholder="e.g. NPX-000001"><button class="primary" onclick="createConnection()">Generate Connection Code</button></div><div id="connectionResult"></div></div><div class="card"><h3>Workflow</h3><div class="flow"><span>Patient ID</span><b>→</b><span>Connection Code</span><b>→</b><span>Patient Portal</span><b>→</b><span>Physician Review</span></div></div></section>
+
+<section id="appointments" class="page"><div class="heading"><h1>Appointments</h1><p>Patient requests and consultation queue.</p></div><div class="card"><div class="tablewrap"><table><thead><tr><th>Patient</th><th>Patient ID</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th></tr></thead><tbody id="appointmentBody"></tbody></table></div></div></section>
+
+<section id="analytics" class="page"><div class="heading"><h1>Analytics</h1><p>Live metrics from the NeoPharmX database.</p></div><div class="grid"><div class="card"><h3>Data Quality</h3><div class="big">94%</div><p class="muted">Prototype completeness indicator</p></div><div class="card"><h3>Patient Records</h3><div class="big" id="analyticTotal">0</div><p class="muted">Stored in SQLite</p></div><div class="card"><h3>AI Requests</h3><div class="big" id="analyticAI">0</div><p class="muted">Educational assistance generated</p></div></div></section>
+<section id="drugs" class="page"><div class="heading"><h1>Drug Information</h1><p>Medication context module for the healthcare professional.</p></div><div class="card"><input class="wide" id="drugSearch" oninput="filterDrugs()" placeholder="Search drug name, class or indication..."><div id="drugList" class="drug-list"></div><div class="notice">Production roadmap: connect this module to an approved, maintained drug-information source.</div></div></section>
+<section id="reports" class="page"><div class="heading"><h1>Reports</h1><p>Patient documents and structured exports.</p></div><div class="card"><h3>Patient Data Export</h3><p class="muted">Download structured patient data for SIH demonstration.</p><button class="primary" onclick="exportCSV()">Download Patient CSV</button></div><div class="card upload-card"><h3>Upload document to a patient</h3><div class="inline-form"><input id="reportPatientId" placeholder="Patient ID"><input id="reportFile" type="file" accept=".pdf,.png,.jpg,.jpeg"><button class="primary" onclick="uploadPhysicianReport()">Upload</button></div><p class="muted">Demo accepts PDF, PNG and JPG. OCR extraction is planned for the next layer.</p></div></section>
+<section id="settings" class="page"><div class="heading"><h1>Settings</h1><p>Prototype configuration and safety controls.</p></div><div class="card"><h3>System</h3><p>NeoPharmX Full-Stack SIH Prototype</p><p class="muted">Flask API • SQLite • Role-based demo access • Patient/physician workflow</p><div class="safety-grid"><div><b>Authentication</b><span>Session-based demo login</span></div><div><b>Consent</b><span>Workflow placeholder for production consent</span></div><div><b>Clinical safety</b><span>Human professional remains final decision-maker</span></div><div><b>Data</b><span>Use synthetic/demo data only</span></div></div></div></section>
+</div>
+
+<!-- PATIENT APP -->
+<div id="patientApp" class="role-app hidden">
+<section id="pHome" class="page active"><div class="welcome"><div><span class="eyebrow">PATIENT PORTAL</span><h1>Welcome, <span id="patientWelcome"></span></h1><p>Provide and confirm your information before your consultation.</p></div><div class="patient-id-card"><small>NeoPharmX Patient ID</small><strong id="patientCode"></strong></div></div>
+<div class="stats"><div class="stat"><i>📅</i><small>Appointments</small><strong id="pApptCount">0</strong><em>Upcoming</em></div><div class="stat"><i>📄</i><small>Documents</small><strong id="pReportCount">0</strong><em>Uploaded</em></div><div class="stat"><i>✓</i><small>Profile</small><strong id="pProfileStatus">--</strong><em>Completion</em></div><div class="stat"><i>🌐</i><small>Language</small><strong id="pLanguage">English</strong><em>Preferred</em></div></div>
+<div class="patient-grid"><div class="card patient-hero"><span class="eyebrow">CASE-TAKING</span><h2>Tell NeoPharmX what you want your healthcare professional to know.</h2><p>Use voice or text, review the captured information, then submit it to the connected physician workflow.</p><div class="patient-actions"><button class="primary" onclick="pGo('pCase')">Start Case-Taking</button><button class="secondary" onclick="pGo('pAppointments')">Book Appointment</button></div></div><div class="card"><h3>Your profile</h3><div id="patientSummary" class="summary-list"></div></div></div>
+<div class="notice"><b>Privacy note:</b> This SIH prototype uses demo data. Production deployment would require consent, secure storage, access controls and applicable healthcare privacy/regulatory compliance.</div></section>
+
+<section id="pCase" class="page"><div class="heading"><h1>Patient Case-Taking</h1><p>Enter information in your own words, then review before submission.</p></div><div class="card form"><div class="voice-box"><button id="voiceBtn" class="voice-btn" onclick="toggleVoice()">● Start Voice Input</button><span id="voiceStatus">Voice input uses the browser speech-recognition capability when supported.</span></div><div class="fields"><label class="full">What is your main concern?<textarea id="pc_complaint" placeholder="Describe your main concern..."></textarea></label><label class="full">Symptoms / current problem<textarea id="pc_symptoms" placeholder="What symptoms are you experiencing? When did they start?"></textarea></label><label>Current Medications<textarea id="pc_meds"></textarea></label><label>Known Allergies<textarea id="pc_allergies"></textarea></label><label class="full">Past Medical History<textarea id="pc_history"></textarea></label><label>Language<select id="pc_language"><option>English</option><option>Hindi</option><option>Regional / Other</option></select></label></div><div class="review-strip"><b>Review before submission</b><span>NeoPharmX will structure the information for the connected physician.</span></div><button class="primary" onclick="submitPatientCase()">Save & Submit Case</button></div></section>
+
+<section id="pAppointments" class="page"><div class="heading"><h1>Appointments</h1><p>Request a consultation and track your appointment status.</p></div><div class="card"><div class="fields"><label>Date<input id="apptDate" type="date"></label><label>Preferred Time<input id="apptTime" type="time"></label><label class="full">Reason<textarea id="apptReason" placeholder="Reason for consultation"></textarea></label></div><button class="primary" onclick="bookAppointment()">Request Appointment</button></div><div class="card"><h3>Your appointment requests</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Status</th></tr></thead><tbody id="patientAppointmentBody"></tbody></table></div></div></section>
+
+<section id="pDocuments" class="page"><div class="heading"><h1>Medical Documents</h1><p>Upload reports or previous prescriptions for your physician to review.</p></div><div class="card upload-card"><h3>Add document</h3><input id="patientFile" type="file" accept=".pdf,.png,.jpg,.jpeg"><select id="patientFileCategory"><option>Medical Report</option><option>CBC / Laboratory</option><option>Prescription</option><option>Discharge Summary</option><option>Imaging</option></select><button class="primary" onclick="uploadPatientReport()">Upload Document</button><p class="muted">Demo supports PDF, PNG and JPG. OCR extraction is a planned enhancement.</p></div><div class="card"><h3>Uploaded documents</h3><div id="patientReports" class="document-list"></div></div></section>
+
+<section id="pProfile" class="page"><div class="heading"><h1>My Profile</h1><p>Review and update your case-taking information.</p></div><div class="card form"><div class="fields"><label>Name<input id="pp_name"></label><label>Age<input id="pp_age" type="number"></label><label>Sex<select id="pp_sex"><option>Select</option><option>Male</option><option>Female</option><option>Other</option></select></label><label>Phone<input id="pp_phone"></label><label>ABHA ID <span class="optional">optional</span><input id="pp_abha"></label><label>Language<select id="pp_language"><option>English</option><option>Hindi</option><option>Regional / Other</option></select></label></div><button class="primary" onclick="savePatientProfile()">Save Profile</button></div></section>
+</div>
+</main></div><div id="drugModal" class="modal-backdrop"><div class="drug-modal"><button class="modal-close" onclick="closeDrugModal()">×</button><span class="eyebrow">DRUG INFORMATION</span><h2 id="drugModalName">Medication</h2><div class="drug-detail"><span>Class</span><b id="drugModalClass"></b></div><div class="drug-detail"><span>Common demo indication</span><b id="drugModalUse"></b></div><div class="modal-note" id="drugModalNote"></div><button class="primary" onclick="closeDrugModal()">Close</button></div></div>
+<div id="toast"></div>
+<script src="/static/app.js"></script></body></html>
