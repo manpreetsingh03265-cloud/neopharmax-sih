@@ -1,5 +1,5 @@
 
-import os, sqlite3, json
+import os, sqlite3, json, math
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from functools import wraps
@@ -44,6 +44,11 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sync_queue(
       id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, payload TEXT,
       created_at TEXT, synced INTEGER DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS ml_model(
+      id INTEGER PRIMARY KEY CHECK(id=1),
+      weights TEXT NOT NULL,
+      updated_at TEXT
     );
     CREATE TABLE IF NOT EXISTS contacts(
       id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id INTEGER, healthworker_id INTEGER,
@@ -102,6 +107,119 @@ def touch_last_seen():
     if "user_id" in session:
         c=db(); c.execute("UPDATE users SET last_seen=? WHERE id=?",(datetime.now().isoformat(timespec="seconds"),session["user_id"])); c.commit(); c.close()
 
+
+# ---------------------------------------------------------------------------
+# NeoPharmX adaptive ML personalization engine
+# This is a lightweight online logistic-regression model for GAME
+# personalization only. It is not a diagnostic or clinical severity model.
+# ---------------------------------------------------------------------------
+DIFFICULTY_LEVELS = ["Easy", "Medium", "Hard"]
+
+def _sigmoid(z):
+    z = max(-30.0, min(30.0, z))
+    return 1.0 / (1.0 + math.exp(-z))
+
+def _difficulty_num(difficulty):
+    return {"Easy": 0.0, "Medium": 0.5, "Hard": 1.0}.get(difficulty, 0.0)
+
+def _default_ml_weights():
+    # bias, accuracy, score, speed, prior_accuracy, candidate_difficulty
+    return [-1.15, 2.10, 0.80, 0.35, 1.10, -1.45]
+
+def _get_ml_weights(c):
+    row = c.execute("SELECT weights FROM ml_model WHERE id=1").fetchone()
+    if not row:
+        weights = _default_ml_weights()
+        c.execute(
+            "INSERT INTO ml_model(id,weights,updated_at) VALUES(1,?,?)",
+            (json.dumps(weights), datetime.now().isoformat(timespec="seconds"))
+        )
+        return weights
+    try:
+        weights = json.loads(row["weights"])
+        if isinstance(weights, list) and len(weights) == 6:
+            return [float(x) for x in weights]
+    except Exception:
+        pass
+    return _default_ml_weights()
+
+def _patient_ml_features(c, uid, domain, candidate_difficulty):
+    rows = c.execute("""
+        SELECT score, accuracy, reaction_ms, difficulty
+        FROM sessions
+        WHERE user_id=? AND domain=?
+        ORDER BY id DESC LIMIT 20
+    """, (uid, domain)).fetchall()
+
+    if rows:
+        avg_accuracy = sum(int(r["accuracy"] or 0) for r in rows) / len(rows) / 100.0
+        avg_score = sum(int(r["score"] or 0) for r in rows) / len(rows) / 100.0
+        # Lower reaction time means better performance. 1800 ms is treated
+        # as a slow reference point for this demo personalization model.
+        avg_reaction = sum(int(r["reaction_ms"] or 180) for r in rows) / len(rows)
+        speed = max(0.0, min(1.0, 1.0 - (avg_reaction - 120.0) / 1680.0))
+        prior_accuracy = avg_accuracy
+        n_sessions = len(rows)
+    else:
+        avg_accuracy = 0.75
+        avg_score = 0.75
+        speed = 0.70
+        prior_accuracy = 0.75
+        n_sessions = 0
+
+    # A small confidence factor prevents a brand-new user from jumping
+    # immediately to Hard.
+    confidence = min(1.0, n_sessions / 5.0)
+    prior_accuracy = 0.75 * (1.0 - confidence) + prior_accuracy * confidence
+
+    return [
+        1.0,
+        avg_accuracy,
+        avg_score,
+        speed,
+        prior_accuracy,
+        _difficulty_num(candidate_difficulty),
+    ]
+
+def recommend_difficulty(uid, domain):
+    c = db()
+    weights = _get_ml_weights(c)
+    candidates = []
+    for difficulty in DIFFICULTY_LEVELS:
+        x = _patient_ml_features(c, uid, domain, difficulty)
+        p = _sigmoid(sum(w * v for w, v in zip(weights, x)))
+        candidates.append((difficulty, p))
+
+    # Target approximately 70% success: enough challenge without making
+    # the activity frustrating. Choose the closest predicted probability.
+    target = 0.70
+    chosen, probability = min(candidates, key=lambda item: abs(item[1] - target))
+    c.commit()
+    c.close()
+    return chosen, round(probability * 100)
+
+def update_adaptive_model(uid, domain, score, accuracy, reaction_ms, difficulty):
+    c = db()
+    weights = _get_ml_weights(c)
+
+    # Train on whether the user successfully completed the activity.
+    y = 1.0 if (accuracy >= 70 and score >= 60) else 0.0
+    x = _patient_ml_features(c, uid, domain, difficulty)
+
+    # Online gradient-descent update.
+    prediction = _sigmoid(sum(w * v for w, v in zip(weights, x)))
+    learning_rate = 0.08
+    error = y - prediction
+    weights = [w + learning_rate * error * v for w, v in zip(weights, x)]
+
+    c.execute(
+        "UPDATE ml_model SET weights=?, updated_at=? WHERE id=1",
+        (json.dumps(weights), datetime.now().isoformat(timespec="seconds"))
+    )
+    c.commit()
+    c.close()
+    return round(prediction * 100)
+
 def login_required(f):
     @wraps(f)
     def w(*a,**k):
@@ -152,7 +270,10 @@ def dashboard():
     alerts=c.execute("SELECT * FROM alerts WHERE user_id=? AND seen=0 ORDER BY id DESC LIMIT 5",(eid,)).fetchall()
     memories=c.execute("SELECT * FROM social_memories WHERE user_id=? ORDER BY id DESC LIMIT 4",(eid,)).fetchall()
     c.close()
-    return render_template("dashboard.html",u=u,reminders=reminders,domains=domains,recent=recent,alerts=alerts,memories=memories)
+    adaptive = {}
+    for domain in DOMAINS:
+        adaptive[domain] = recommend_difficulty(eid, domain)
+    return render_template("dashboard.html",u=u,reminders=reminders,domains=domains,recent=recent,alerts=alerts,memories=memories,adaptive=adaptive)
 
 @app.get("/games")
 @login_required
@@ -179,6 +300,10 @@ def play(slug):
         c.execute("""INSERT INTO sessions(user_id,domain,score,accuracy,difficulty,reaction_ms,created_at)
                      VALUES(?,?,?,?,?,?,?)""",
                   (uid,domain,score,acc,diff,reaction,datetime.now().isoformat(timespec="seconds")))
+        c.commit()
+        # Update the persistent online ML model after each completed activity.
+        update_adaptive_model(uid, domain, score, acc, reaction, diff)
+        c=db()
         # Transparent demo rule: flag sustained low memory performance.
         if domain=="Memory" and score<=60:
             add_alert(c,uid,domain,
@@ -186,7 +311,36 @@ def play(slug):
                       "Review")
         c.commit(); c.close()
         return jsonify(ok=True)
-    return render_template("play.html",domain=allowed[slug],slug=slug,u=current_user())
+    uid = elder_id()
+    recommended_difficulty, predicted_success = recommend_difficulty(uid, allowed[slug])
+    return render_template(
+        "play.html",
+        domain=allowed[slug],
+        slug=slug,
+        u=current_user(),
+        recommended_difficulty=recommended_difficulty,
+        predicted_success=predicted_success
+    )
+
+@app.get("/api/adaptive/<slug>")
+@login_required
+def adaptive(slug):
+    allowed = {
+        "memory":"Memory",
+        "attention":"Attention",
+        "concentration":"Concentration",
+        "routine":"Daily Routine Recall",
+        "pattern":"Pattern & Object Recognition"
+    }
+    if slug not in allowed:
+        return jsonify(ok=False, message="Unknown activity."), 404
+    difficulty, predicted_success = recommend_difficulty(elder_id(), allowed[slug])
+    return jsonify(
+        ok=True,
+        domain=allowed[slug],
+        recommended_difficulty=difficulty,
+        predicted_success=predicted_success
+    )
 
 @app.get("/reminders")
 @login_required
