@@ -1,65 +1,44 @@
-# NeoPharmX Full-Stack SIH Prototype
+# NeoPharmX | SIH26003 Super Prototype
 
-NeoPharmX is a Flask + SQLite demonstration of a two-sided patient case-taking workflow for SIH26047.
+This version is structured around the supplied SIH26003 problem statement.
 
-## Prototype workflow
-
-**Patient:** Register/demo login → NeoPharmX Patient ID → appointment → voice/text case-taking → reports/prescriptions → review → submit.
-
-**NeoPharmX:** Structure information → maintain patient record → rule-based educational assistance → drug information.
-
-**Healthcare professional:** Patient queue → search Patient ID → review structured history/documents → AI-assisted information → final professional decision.
+## Requirements covered
+- Interactive cognitive games: Memory, Attention, Concentration, Daily Routine Recall, Pattern & Object Recognition
+- Adaptive difficulty based on performance
+- Multilingual-ready and voice-assisted interaction
+- NER cultural-theme content slots
+- Memory assistance reminders: medicines, hydration, daily activities, medical appointments
+- Caregiver monitoring and alerts
+- Health-worker review dashboard
+- Low-connectivity/PWA cache and offline-first workflow
+- Tablet/mobile responsive UI
+- Longitudinal cognitive performance tracking
+- Social/familiar memory prompts
+- Accessibility controls
+- SQLite persistence
+- Flask backend
+- Demo authentication
 
 ## Demo accounts
+Elderly: elder@neopharmax.demo / demo123
+Caregiver: caregiver@neopharmax.demo / demo123
+Health Worker: healthworker@neopharmax.demo / demo123
 
-### Healthcare professional
-- Email: `demo@neopharmax.local`
-- Password: `demo123`
+## Run
+pip install -r requirements.txt
+python app.py
+Open http://127.0.0.1:5000
 
-### Patient
-- Email: `patient@neopharmax.local`
-- Password: `patient123`
-- Patient ID: `NPX-000001`
+## Render
+Build: pip install -r requirements.txt
+Start: gunicorn app:app
 
-## Current features
+## Important boundary
+The adaptive engine and cognitive scores are prototype demonstration logic, not clinically validated AI/ML or diagnostic measures. A production system requires clinical validation, consent, privacy/security controls, accessibility testing, validated multilingual/cultural content, robust offline synchronization, notifications and appropriate regulatory review.
 
-- Role-based demo login for patient and healthcare professional
-- NeoPharmX Patient IDs (`NPX-XXXXXX`)
-- Patient profile and structured case-taking
-- Patient ↔ physician connection-code workflow
-- Appointment request and queue
-- Voice case-taking using browser speech recognition when supported
-- English/Hindi/regional-language UI fields and language selection
-- Medical report/prescription upload for PDF/JPG/PNG demo files
-- Physician patient records and search
-- Rule-based educational AI assistance
-- Drug information demo module
-- Allergy and medication fields
-- CSV export for demonstration
-- Responsive dashboard
-
-## Roadmap shown in the prototype
-
-- OCR extraction from uploaded reports and prescriptions
-- ABHA/ABDM consent-based onboarding and record linkage
-- FHIR/HIS/EMR interoperability
-- Clinical validation of decision-support rules/models
-- Strong production authentication, encryption, audit logs and access controls
-- Multilingual conversational case-taking and validated clinical alerts
-
-## Run locally
-
-1. Install Python 3.10+.
-2. Open a terminal in this folder.
-3. Create a virtual environment:
-   - Windows: `python -m venv .venv` then `.venv\\Scripts\\activate`
-   - macOS/Linux: `python3 -m venv .venv` then `source .venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
-5. Start: `python app.py`
-6. Open: `http://127.0.0.1:5000`
-
-The SQLite database is created automatically on first launch.
-
-## Safety
-
-This is a demonstration/prototype system. Use synthetic/demo data only. The AI module is rule-based educational decision support and does not independently diagnose or prescribe. Production deployment would require appropriate clinical validation, privacy/consent controls, secure infrastructure, auditability and applicable healthcare regulations.
+## Separate role portals
+- Elderly: My Care Portal, games, reminders, own activity history and personal memory prompts.
+- Caregiver: Caregiver Portal, daily engagement, reminder adherence, trend alerts and caregiver notes.
+- Health Worker: Health Worker Portal, longitudinal professional review, domain trends, routine adherence and follow-up workflow.
+- All roles: My Profile with identity, age, role, language, voice and accessibility controls.
+\n## Final role features\n- Separate role-selection login and dedicated login screens for Elderly Patient, Caregiver and Health Worker.\n- Live navigation-label language switching: English, Hindi, Assamese, Bengali, Manipuri and Khasi.\n- Patient can contact a health worker and see message history.\n- Caregiver and Health Worker portals show patient last-seen timestamp.\n
