@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10243d"><link rel="manifest" href="/manifest.webmanifest"><title>{% block title %}NeoPharmX{% endblock %}</title><link rel="stylesheet" href="/static/style.css"></head><body><div class="layout"><aside class="side"><div class="brand">Neo<span>PharmX</span></div><div class="sub">AI-ASSISTED COGNITIVE & MEMORY ASSISTANCE</div><nav class="nav">
+<a class="{% if request.endpoint=='dashboard' %}active{% endif %}" href="/" data-i18n="overview">Overview</a>
+{% if u.role=="elder" %}
+<a class="{% if request.endpoint=='patient_portal' %}active{% endif %}" href="/patient-portal" data-i18n="care">My Care Portal</a><a class="{% if request.endpoint=='contact_health_worker' %}active{% endif %}" href="/contact-health-worker" data-i18n="contact">Contact Health Worker</a>
+<a class="{% if request.endpoint in ['games','play'] %}active{% endif %}" href="/games" data-i18n="games">Cognitive Games</a>
+<a class="{% if request.endpoint=='reminders' %}active{% endif %}" href="/reminders" data-i18n="memory">Memory Assist</a>
+{% elif u.role=="caregiver" %}
+<a class="{% if request.endpoint=='caregiver' %}active{% endif %}" href="/caregiver" data-i18n="caregiver">Caregiver Portal</a>
+{% elif u.role=="healthworker" %}
+<a class="{% if request.endpoint=='healthworker' %}active{% endif %}" href="/healthworker" data-i18n="health">Health Worker Portal</a>
+{% endif %}
+<a class="{% if request.endpoint=='profile' %}active{% endif %}" href="/profile" data-i18n="profile">My Profile</a>
+<a href="/logout" data-i18n="logout">Logout</a>
+</nav><div class="user"><b>{{u.name}}</b><br><span style="color:#a9bad0">{{u.role|capitalize}} • {{u.age}} years</span></div></aside><main class="main">{% with m=get_flashed_messages() %}{% if m %}<div class="alert">{{m[0]}}</div>{% endif %}{% endwith %}{% block content %}{% endblock %}</main></div><div id="toast" class="toast"></div><script src="/static/i18n.js"></script><script>function toast(t){let x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',2200)}if('serviceWorker' in navigator){navigator.serviceWorker.register('/service-worker.js').catch(()=>{})}if(localStorage.getItem("neoLang"))applyNeoLanguage(localStorage.getItem("neoLang"))</script>{% block scripts %}{% endblock %}</body></html>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}My Care Portal | NeoPharmX{% endblock %}{% block content %}
+<div class="top"><div><h1>My Care Portal</h1><div class="muted">Your personal cognitive-support space. Simple, private and elderly-friendly.</div></div><span class="pill green">MY INFORMATION</span></div>
+<div class="g4">
+<div class="card"><div class="muted">My age</div><div class="metric">{{u.age}}</div><span class="tag">years</span></div>
+<div class="card"><div class="muted">Recent activities</div><div class="metric">{{sessions|length}}</div><span class="tag">recorded</span></div>
+<div class="card"><div class="muted">My reminders</div><div class="metric">{{reminders|length}}</div><span class="tag">today</span></div>
+<div class="card"><div class="muted">My language</div><div class="metric" style="font-size:22px">{{u.language|upper}}</div><span class="tag">interface</span></div>
+</div>
+<div class="g2 section">
+<div class="card"><h2>Start an activity</h2><div class="g3">
+<a class="card game" href="/play/memory"><div class="icon">🧠</div><b>Memory</b><p class="muted">Short recall exercise</p></a>
+<a class="card game" href="/play/attention"><div class="icon">👁</div><b>Attention</b><p class="muted">Target recognition</p></a>
+<a class="card game" href="/play/routine"><div class="icon">🕒</div><b>Routine Recall</b><p class="muted">Daily sequence</p></a>
+</div></div>
+<div class="card"><h2>Today's reminders</h2>{% for r in reminders %}<div class="row"><span><b>{{r.time}}</b><br>{{r.title}}</span><span class="tag">{{'Done' if r.done else r.kind}}</span></div>{% endfor %}<a class="btn" href="/reminders" style="display:inline-block;margin-top:12px">Open reminders</a></div>
+</div>
+<div class="g2 section">
+<div class="card"><h2>My activity history</h2><table class="table"><tr><th>Activity</th><th>Score</th><th>Accuracy</th></tr>{% for x in sessions %}<tr><td>{{x.domain}}</td><td>{{x.score}}</td><td>{{x.accuracy}}%</td></tr>{% endfor %}</table></div>
+<div class="card"><h2>Familiar memory prompts</h2>{% for m in memories %}<div class="row"><div><b>{{m.title}}</b><br><span class="muted">{{m.text}}</span></div><span class="tag">{{m.image_label}}</span></div>{% endfor %}</div>
+</div>
+<div class="success section"><b>Your data:</b> this portal shows the elderly user's own profile, activities and reminders. Caregiver and health-worker portals are separate role-based views.</div>
+{% endblock %}
